@@ -29,20 +29,33 @@ import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 
 @ChannelHandler.Sharable
 public class NettyEncoder extends MessageToByteEncoder<RemotingCommand> {
-    private static final InternalLogger log = InternalLoggerFactory.getLogger(RemotingHelper.ROCKETMQ_REMOTING);
+
+    private static final InternalLogger log =
+            InternalLoggerFactory.getLogger(RemotingHelper.ROCKETMQ_REMOTING);
 
     @Override
-    public void encode(ChannelHandlerContext ctx, RemotingCommand remotingCommand, ByteBuf out)
+    public void encode(ChannelHandlerContext ctx,
+                       RemotingCommand remotingCommand, ByteBuf out)
         throws Exception {
         try {
             ByteBuffer header = remotingCommand.encodeHeader();
+            try {
+                byte[] tempHeaderByte = header.array();
+                System.out.println("header:" + new String(tempHeaderByte));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             out.writeBytes(header);
             byte[] body = remotingCommand.getBody();
             if (body != null) {
+                System.out.println("body部分数据：" + new String(body));
+                // 再发送body部分的实际数据
                 out.writeBytes(body);
             }
         } catch (Exception e) {
-            log.error("encode exception, " + RemotingHelper.parseChannelRemoteAddr(ctx.channel()), e);
+            log.error("encode exception, " +
+                    RemotingHelper.parseChannelRemoteAddr(ctx.channel()), e);
             if (remotingCommand != null) {
                 log.error(remotingCommand.toString());
             }

@@ -143,14 +143,18 @@ public class RemotingCommand {
 
     public static RemotingCommand decode(final ByteBuffer byteBuffer) {
         int length = byteBuffer.limit();
+        // 先取出表示header部分数据大小的长度值
         int oriHeaderLen = byteBuffer.getInt();
         int headerLength = getHeaderLength(oriHeaderLen);
 
+        // 读取出header部分数据
         byte[] headerData = new byte[headerLength];
         byteBuffer.get(headerData);
 
+        // 重新创建一个新的RemotingCommand对象
         RemotingCommand cmd = headerDecode(headerData, getProtocolType(oriHeaderLen));
 
+        // 读取出body部分数据
         int bodyLength = length - 4 - headerLength;
         byte[] bodyData = null;
         if (bodyLength > 0) {
@@ -408,14 +412,18 @@ public class RemotingCommand {
         byte[] headerData;
         headerData = this.headerEncode();
 
+        // length = 4 + header部分字节数组长度
         length += headerData.length;
 
         // 3> body data length
+        // length = 4 + header部分字节数组长度 + body部分字节数据长度
         length += bodyLength;
 
+        // 4 + length - bodyLength = 4 + (4 + header部分字节数组长度 + body部分字节数组长度) - body部分字节数组长度 = 4 + 4 + header部分字节数组长度
         ByteBuffer result = ByteBuffer.allocate(4 + length - bodyLength);
 
         // length
+        // 先写入一个4个字节的int值，表示请求数据的长度（header部分前4个字节的表示header数据的长度值 + header部分数据字节数据长度值 + body部分数据字节数组长度值）
         result.putInt(length);
 
         // header length

@@ -26,58 +26,28 @@ import org.apache.rocketmq.remoting.common.RemotingHelper;
  * This class demonstrates how to send messages to brokers using provided {@link DefaultMQProducer}.
  */
 public class Producer {
-    public static void main(String[] args) throws MQClientException, InterruptedException {
 
-        /*
-         * Instantiate with a producer group name.
-         */
-        DefaultMQProducer producer = new DefaultMQProducer("qk_producer_group");
+    public static void main(String[] args)
+            throws Exception {
 
-
-        /*
-         * Specify name server addresses.
-         * <p/>
-         *
-         * Alternatively, you may specify name server addresses via exporting environmental variable: NAMESRV_ADDR
-         * <pre>
-         * {@code
-         * producer.setNamesrvAddr("name-server1-ip:9876;name-server2-ip:9876");
-         * }
-         * </pre>
-         */
+        String producerGroup = "qk_producer_group";
+        // 初始化producer
+        DefaultMQProducer producer =
+                new DefaultMQProducer(producerGroup);
+        // 配置NameServer服务地址
         producer.setNamesrvAddr("127.0.0.1:9876");
-
-        /*
-         * Launch the instance.
-         */
+        // 启动producer
         producer.start();
 
-        for (int i = 0; i < 10; i++) {
-            try {
+        Message msg = new Message("TopicTest",
+                "TagA",
+                "key001",
+                "Hello world".getBytes());
+        // 发送消息
+        SendResult sendResult = producer.send(msg);
+        System.out.printf("%s%n", sendResult);
 
-                /*
-                 * Create a message instance, specifying topic, tag and message body.
-                 */
-                Message msg = new Message("TopicTest" /* Topic */,
-                    "TagA" /* Tag */,
-                    ("Hello RocketMQ " + i).getBytes(RemotingHelper.DEFAULT_CHARSET) /* Message body */
-                );
-
-                /*
-                 * Call send message to deliver message to one of brokers.
-                 */
-                SendResult sendResult = producer.send(msg);
-
-                System.out.printf("%s%n", sendResult);
-            } catch (Exception e) {
-                e.printStackTrace();
-                Thread.sleep(1000);
-            }
-        }
-
-        /*
-         * Shut down once the producer instance is not longer in use.
-         */
+        // 关闭producer
         producer.shutdown();
     }
 }

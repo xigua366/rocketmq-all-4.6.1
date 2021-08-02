@@ -199,6 +199,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                 this.topicPublishInfoTable.put(this.defaultMQProducer.getCreateTopicKey(), new TopicPublishInfo());
 
                 if (startFactory) {
+                    // 启动Producer Client
                     mQClientFactory.start();
                 }
 
@@ -553,6 +554,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         long beginTimestampFirst = System.currentTimeMillis();
         long beginTimestampPrev = beginTimestampFirst;
         long endTimestamp = beginTimestampFirst;
+        // 尝试从本地缓存查找某个topic的路由表信息，如果本地缓存没有会发送请求到NameServer上拉取然后缓存到本地
         TopicPublishInfo topicPublishInfo = this.tryToFindTopicPublishInfo(msg.getTopic());
         if (topicPublishInfo != null && topicPublishInfo.ok()) {
             boolean callTimeout = false;
@@ -564,6 +566,10 @@ public class DefaultMQProducerImpl implements MQProducerInner {
             String[] brokersSent = new String[timesTotal];
             for (; times < timesTotal; times++) {
                 String lastBrokerName = null == mq ? null : mq.getBrokerName();
+                // topic是逻辑上的概念，会将数据做分片存储到不同的broker上去，所以一个topic下有多个MessageQueue
+                // 这里就是根据一个策略选择一个本次数据要发送上去的MessageQueue出来
+                // 所谓的策略其实就是一个负载均衡算法，比如默认就是用的取模算法
+                // 有一点要注意的是，如果某个broker出现了故障，是需要及时规避掉的，在这个方法里也进行了判断处理
                 MessageQueue mqSelected = this.selectOneMessageQueue(topicPublishInfo, lastBrokerName);
                 if (mqSelected != null) {
                     mq = mqSelected;
