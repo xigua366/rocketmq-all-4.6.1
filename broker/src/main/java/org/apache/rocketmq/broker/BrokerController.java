@@ -240,6 +240,7 @@ public class BrokerController {
 
         if (result) {
             try {
+                // 初始化消息在本地磁盘上存储相关的组件
                 this.messageStore =
                     new DefaultMessageStore(this.messageStoreConfig, this.brokerStatsManager, this.messageArrivingListener,
                         this.brokerConfig);
@@ -849,10 +850,12 @@ public class BrokerController {
     }
 
     public void start() throws Exception {
+        // 启动消息存储相关工作线程
         if (this.messageStore != null) {
             this.messageStore.start();
         }
 
+        // 启动Netty Server端
         if (this.remotingServer != null) {
             this.remotingServer.start();
         }
